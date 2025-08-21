@@ -1,14 +1,14 @@
 {
   "name": "blog-app",
   "version": "1.0.0",
-  "description": "",
-  "homepage": "https://github.com/jeettamang/food-app-#readme",
+  "description": "A blog application with user registration and authentication",
+  "homepage": "https://github.com/jeettamang/food-app#readme",
   "bugs": {
-    "url": "https://github.com/jeettamang/food-app-/issues"
+    "url": "https://github.com/jeettamang/food-app/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeettamang/food-app-.git"
+    "url": "git+https://github.com/jeettamang/food-app.git"
   },
   "license": "ISC",
   "author": "Jeett Tamang",
