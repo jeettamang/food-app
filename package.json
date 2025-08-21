@@ -2,13 +2,13 @@
   "name": "blog-app",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/jeettamang/restaurant-#readme",
+  "homepage": "https://github.com/jeettamang/food-app-#readme",
   "bugs": {
-    "url": "https://github.com/jeettamang/restaurant-/issues"
+    "url": "https://github.com/jeettamang/food-app-/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeettamang/restaurant-.git"
+    "url": "git+https://github.com/jeettamang/food-app-.git"
   },
   "license": "ISC",
   "author": "Jeett Tamang",
