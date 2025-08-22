@@ -1,4 +1,5 @@
-import { hashedPassword } from "../../utils/bcrypt.js";
+import { compareHashed, hashedPassword } from "../../utils/bcrypt.js";
+import { genJWT } from "../../utils/token.js";
 import UserModel from "./userModel.js";
 
 //REGISTER
@@ -40,4 +41,68 @@ const register = async (req, res) => {
   }
 };
 
-export { register };
+//LOGIN
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    // Find user by email
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Compare password
+    const isMatch = compareHashed(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    // JWT payload
+    const payload = {
+      id: user._id,
+      userName: user.userName,
+      email: user.email,
+      role: user.role,
+    };
+
+    // Generate token
+    const token = genJWT(payload);
+    if (!token) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to generate token",
+      });
+    }
+
+    // Success response
+    return res.status(200).json({
+      success: true,
+      message: "User login successful",
+      token,
+      userData: payload,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "User login API error",
+      error: error.message,
+    });
+  }
+};
+
+export { register, login };
