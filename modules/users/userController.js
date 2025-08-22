@@ -5,7 +5,7 @@ import UserModel from "./userModel.js";
 //REGISTER
 const register = async (req, res) => {
   try {
-    const { userName, email, password, address, phone } = req.body;
+    const { userName, email, password, address, phone, role } = req.body;
     if (!userName || !email || !password || !address || !phone) {
       return res.status(400).json({
         success: false,
@@ -26,6 +26,7 @@ const register = async (req, res) => {
       password: hashedPass,
       address,
       phone,
+      role,
     });
     res.status(200).json({
       success: true,
@@ -105,4 +106,49 @@ const login = async (req, res) => {
   }
 };
 
-export { register, login };
+//Get users
+const userList = async (req, res) => {
+  try {
+    const users = await UserModel.find().select("-password");
+    res.status(200).json({ message: "All user list", users });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching user", error: error.message });
+  }
+};
+const singleUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findById(id).select("-password");
+    res.status(200).json({ message: "User details", user });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching user", error: error.message });
+  }
+};
+const updateUser = async (req, res) => {
+  try {
+    const { userName, email, phone, address } = req.body;
+    const { id } = req.params;
+    const userData = { userName, email, phone, address };
+    const updatedUser = await UserModel.findByIdAndUpdate(id, userData, {
+      new: true,
+    });
+    if (!updatedUser) {
+      return res
+        .status(400)
+        .json({ message: "Unable to update the user data" });
+    }
+    res.status(200).json({
+      message: "User data updated successfully",
+      updatedUser,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating user", error: error.message });
+  }
+};
+export { register, login, userList, singleUser, updateUser };
