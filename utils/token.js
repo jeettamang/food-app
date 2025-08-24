@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 const genJWT = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1d",
@@ -32,4 +33,7 @@ const verifyToken = (req, res, next) => {
     });
   }
 };
-export { genJWT, verifyToken };
+
+//OTP
+const generateOTP = () => crypto.randomInt(100000, 1000000);
+export { genJWT, verifyToken, generateOTP };

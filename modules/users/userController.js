@@ -1,5 +1,6 @@
+import { sendMail } from "../../services/mailer.js";
 import { compareHashed, hashedPassword } from "../../utils/bcrypt.js";
-import { genJWT } from "../../utils/token.js";
+import { generateOTP, genJWT } from "../../utils/token.js";
 import UserModel from "./userModel.js";
 
 //REGISTER
@@ -19,7 +20,22 @@ const register = async (req, res) => {
         message: "This email is already registerd",
       });
     }
+    const OTP = generateOTP();
     const hashedPass = hashedPassword(password);
+    try {
+      await sendMail({
+        to: email,
+        subject: "Welcome to Foot-App",
+        message: `<h2>Dear ${userName}</h2>, </br>
+          <p>Your account has been created. Your OTP for email verification is : ${OTP}
+          `,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Registration failed: could not send email",
+      });
+    }
     const newUser = await UserModel.create({
       userName,
       email,
@@ -27,7 +43,9 @@ const register = async (req, res) => {
       address,
       phone,
       role,
+      otp: OTP,
     });
+
     res.status(200).json({
       success: true,
       message: "User registerd successfully",
@@ -117,6 +135,7 @@ const userList = async (req, res) => {
       .json({ message: "Error fetching user", error: error.message });
   }
 };
+//get single user
 const singleUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -128,6 +147,7 @@ const singleUser = async (req, res) => {
       .json({ message: "Error fetching user", error: error.message });
   }
 };
+//update user
 const updateUser = async (req, res) => {
   try {
     const { userName, email, phone, address } = req.body;
@@ -151,4 +171,105 @@ const updateUser = async (req, res) => {
       .json({ message: "Error updating user", error: error.message });
   }
 };
-export { register, login, userList, singleUser, updateUser };
+//verify email
+const verifyEMail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) throw new Error("Email and OTP are required");
+    const user = await UserModel.findOne({ email });
+    if (!user) throw new Error("User not found");
+    if (user.otp !== otp) throw new Error("OTP is mismatch");
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { email },
+      { $set: { isActive: true, isEmailVerified: true, otp: "" } },
+      { new: true }
+    ).select("-password");
+    res.status(200).json({
+      message: "Email verified successfully",
+      userData: updatedUser,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+//Forget Password
+const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new Error("Email is required");
+    const user = await UserModel.findOne({
+      email,
+      isActive: true,
+      isEmailVerified: true,
+    });
+    if (!user) throw new Error("User not found");
+    const resetOTP = String(generateOTP());
+    const otpExpiry = Date.now() + 5 * 60 * 1000;
+    await sendMail({
+      to: email,
+      subject: "Password Reset OTP",
+      message: `<p>Your OTP for password reset is: <b>${resetOTP}</b></p>`,
+    });
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { email },
+      { $set: { otp: resetOTP, otpExpires: otpExpiry } },
+      { new: true }
+    ).select("-password");
+    if (!updatedUser) throw new Error("Failed to update token");
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to your email ",
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+//Verify ResetOTP
+const verifyResetOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    if (!otp) throw new Error("OTP is required");
+    const user = await UserModel.findOne({
+      otp: String(otp),
+      otpExpires: { $gt: Date.now() },
+      isActive: true,
+      isEmailVerified: true,
+    }).select("-password");
+
+    // Log the times for debugging
+    console.log("Current time is:", Date.now());
+    if (user) {
+      console.log("OTP expires at:", user.otpExpires);
+      console.log(
+        "Is current time less than expiry?",
+        Date.now() < user.otpExpires
+      );
+    } else {
+      console.log("User not found by OTP, or OTP is expired.");
+    }
+
+    // Now, perform the expiration check
+    if (!user || user.otpExpires <= Date.now()) {
+      throw new Error("OTP is expired");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP is verified successfully",
+      userId: user._id,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+export {
+  register,
+  login,
+  userList,
+  singleUser,
+  updateUser,
+  verifyEMail,
+  forgetPassword,
+  verifyResetOTP,
+};

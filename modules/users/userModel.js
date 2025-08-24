@@ -28,7 +28,9 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      otpExpires: Number,
     },
+    otp: String,
     isActive: {
       type: Boolean,
       default: false,
