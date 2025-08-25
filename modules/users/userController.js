@@ -21,6 +21,8 @@ const register = async (req, res) => {
       });
     }
     const OTP = generateOTP();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
     const hashedPass = hashedPassword(password);
     try {
       await sendMail({
@@ -44,6 +46,7 @@ const register = async (req, res) => {
       phone,
       role,
       otp: OTP,
+      otpExpires,
     });
 
     res.status(200).json({
@@ -263,6 +266,54 @@ const verifyResetOTP = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+const resetPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+    if (!oldPassword || !newPassword)
+      throw new Error("Old password and new password are required");
+    const user = await UserModel.findOne({
+      _id: userId,
+      isActive: true,
+      isEmailVerified: true,
+    });
+    if (!user) throw new Error("User not found");
+    const isMatch = compareHashed(oldPassword, user.password);
+    if (!isMatch) throw new Error("Old password is incorrect");
+    const newPass = hashedPassword(newPassword);
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { password: newPass },
+      { new: true }
+    );
+    if (!updatedUser) throw new Error("Password reset failed");
+    res.status(200).json({
+      message: "Passwored reset successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error in Change Password API",
+      error: error.message,
+    });
+  }
+};
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+    if (!deletedUser) throw new Error("Failed to delete user");
+    res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error in Delete user API",
+      error: error.message,
+    });
+  }
+};
 export {
   register,
   login,
@@ -272,4 +323,6 @@ export {
   verifyEMail,
   forgetPassword,
   verifyResetOTP,
+  resetPassword,
+  deleteUser,
 };

@@ -1,8 +1,10 @@
 import express from "express";
 import {
+  deleteUser,
   forgetPassword,
   login,
   register,
+  resetPassword,
   singleUser,
   updateUser,
   userList,
@@ -20,6 +22,8 @@ router
   .put("/update/:id", verifyToken, updateUser)
   .post("/verify-email", verifyEMail)
   .post("/forget-password", forgetPassword)
-  .post("/verify-otp", verifyResetOTP);
+  .post("/verify-otp", verifyResetOTP)
+  .post("/reset-password", verifyToken, resetPassword)
+  .delete("/delete/:id", verifyToken, deleteUser);
 
 export default router;
