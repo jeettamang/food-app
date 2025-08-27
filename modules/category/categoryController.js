@@ -37,4 +37,39 @@ const categoryList = async (req, res) => {
     });
   }
 };
-export { createCategory, categoryList };
+//update
+const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedCategory = await CategoryModel.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedCategory) throw new Error("Failed to update the category data");
+    res.status(200).send({
+      success: true,
+      message: "Category updated successfully",
+      data: updatedCategory,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Error in updating the category API" });
+  }
+};
+//delete
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedCategory = await CategoryModel.findByIdAndDelete(id);
+    if (!deletedCategory) throw new Error("Failed to update the category data");
+    res.status(200).send({
+      success: true,
+      message: "Category deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Error in deleting category API" });
+  }
+};
+export { createCategory, categoryList, updateCategory, deleteCategory };
