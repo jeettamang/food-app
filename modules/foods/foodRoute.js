@@ -3,6 +3,7 @@ import {
   createFood,
   deleteFood,
   getFood,
+  getFoodByRestaurant,
   getFoods,
   updateFood,
 } from "./foodController.js";
@@ -14,6 +15,7 @@ router
   .post("/create", verifyToken, createFood)
   .get("/list", getFoods)
   .get("/single/:id", getFood)
+  .get("/restaurant/:id", getFoodByRestaurant)
   .put("/update/:id", verifyToken, updateFood)
   .delete("/delete/:id", verifyToken, deleteFood);
 

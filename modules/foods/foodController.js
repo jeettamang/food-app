@@ -83,7 +83,28 @@ const getFood = async (req, res) => {
   }
 };
 //Get by Restaurant ID
-
+const getFoodByRestaurant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const foods = await FoodModel.find({ restaurant: id });
+    if (!foods || foods.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No food items found for this restaurant",
+      });
+    }
+    res.status(200).send({
+      success: true,
+      amessage: "Food item by Restaurant",
+      data: foods,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .send({ message: "Error in getting the Food item API by restaurant ID" });
+  }
+};
 //update
 const updateFood = async (req, res) => {
   try {
@@ -120,4 +141,11 @@ const deleteFood = async (req, res) => {
     res.status(500).send({ message: "Error in deleting the Food item API" });
   }
 };
-export { createFood, getFoods, getFood, updateFood, deleteFood };
+export {
+  createFood,
+  getFoods,
+  getFood,
+  getFoodByRestaurant,
+  updateFood,
+  deleteFood,
+};
